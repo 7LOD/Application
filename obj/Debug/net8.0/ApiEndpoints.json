@@ -9,7 +9,7 @@
     "Parameters": [
       {
         "Name": "Dto",
-        "Type": "MyEventsApi.Dtos.LoginDto",
+        "Type": "MyEventsApi.Dto.LoginDto",
         "IsRequired": true
       }
     ],
@@ -25,7 +25,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "MyEventsApi.Dtos.RegisterDto",
+        "Type": "MyEventsApi.Dto.RegisterDto",
         "IsRequired": true
       }
     ],
@@ -51,10 +51,26 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "MyEventsApi.Dtos.EventCreateDto",
+        "Type": "MyEventsApi.Dto.EventCreateDto",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Program\u002B\u003C\u003Ec",
+    "Method": "\u003C\u003CMain\u003E$\u003Eb__0_3",
+    "RelativePath": "health",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
   }
 ]

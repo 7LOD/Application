@@ -1,13 +1,19 @@
-    using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.EntityFrameworkCore;
+using MyEventsApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -38,6 +44,20 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.MapGet("/health", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        await db.Database.CanConnectAsync();
+        return Results.Ok(new { status = "Healthy", database = "Connected" });
+    }
+    catch
+    {
+        return Results.Problem("Database connection failed");
+    }
+
+
+});
 
 app.UseSwagger();
 app.UseSwaggerUI();

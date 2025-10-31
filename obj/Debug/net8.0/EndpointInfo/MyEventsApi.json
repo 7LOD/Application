@@ -107,6 +107,18 @@
           }
         }
       }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "MyEventsApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
