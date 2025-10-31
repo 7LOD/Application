@@ -1,21 +1,27 @@
 services:
-  postgres:
+  myevents_postgres:
     image: postgres:15
     container_name: myevents_postgres
-    restart: always
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
       POSTGRES_DB: eventsdb
     ports:
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - myevents_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d eventsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-volumes:
-  pgdata:
-
-networks:
-  myevents_network:
+  myevents_api:
+    build: .
+    container_name: myevents_api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=myevents_postgres;Port=5432;Database=eventsdb;Username=dev;Password=dev
+    depends_on:
+      myevents_postgres:
+        condition: service_healthy

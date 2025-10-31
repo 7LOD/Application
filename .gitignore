@@ -1,0 +1,29 @@
+# Build artifacts
+bin/
+obj/
+out/
+publish/
+
+# IDE
+.vs/
+*.user
+*.suo
+.vscode/
+.history/
+
+# Docker local data
+postgres-data/
+
+# Env files
+.env
+.env.*
+
+# Logs
+*.log
+
+# HTTP scratch
+*.http
+
+# (на майбутнє) Angular
+node_modules/
+dist/

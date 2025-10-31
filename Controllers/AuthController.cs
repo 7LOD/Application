@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyEventsApi.Models;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
@@ -6,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Security.Claims;
 using MyEventsApi.Dto;
+using MyEventsApi.Data;
 
 namespace MyEventsApi.Controllers
 
@@ -15,50 +17,47 @@ namespace MyEventsApi.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private static List<User> _users = new();
+        private readonly ApplicationDbContext _context;
         private readonly IConfiguration _config;
         
-        public AuthController(IConfiguration config)
+        public AuthController(ApplicationDbContext context, IConfiguration config)
         {
+            _context = context;
             _config = config;
         }
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody]RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto, CancellationToken ct)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email, ct))
+                return Conflict("User with this email already exists");
 
-            if (_users.Any(u => u.Email == dto.Email))
-            {
-                return Conflict("User already exists");
-            }
+            var hash = ComputeSha256Hash(dto.Password);
+
             var user = new User
             {
                 Email = dto.Email,
-                DisplayName = dto.DisplayName,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+                PasswordHash = hash,
+                DisplayName = dto.DisplayName
             };
 
-            _users.Add(user);
-
-            return Ok(new { user.Id, user.Email, user.DisplayName });
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync(ct);
+            return Ok(new { message = "User registered succesfully", user.Id, });
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody]LoginDto Dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto, CancellationToken ct)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var user = _users.FirstOrDefault(u => u.Email == Dto.Email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(Dto.Password, user.PasswordHash))
-                return Unauthorized("Invalid credentials");
+            var hash = ComputeSha256Hash(dto.Password);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == dto.Email && u.PasswordHash == hash, ct);
+            if(user == null) return Unauthorized("Invalid credentials");
 
             var token = GenerateJwtToken(user);
-
             return Ok(new { token });
         }
+
 
         private string GenerateJwtToken(User user)
         {
@@ -76,11 +75,18 @@ namespace MyEventsApi.Controllers
                 issuer: _config["JWT:Issuer"],
                 audience: _config["JWT:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: DateTime.UtcNow.AddHours(6),
                 signingCredentials: creds
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private static string ComputeSha256Hash(string rawData)
+        {
+            using var sha256 = SHA256.Create();
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
         }
     }
 }
