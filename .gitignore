@@ -24,6 +24,6 @@ postgres-data/
 # HTTP scratch
 *.http
 
-# (íà ìàéáóòíº) Angular
+# Angular/Node (íà ìàéáóòíº)
 node_modules/
 dist/

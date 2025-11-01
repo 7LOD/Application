@@ -1,4 +1,4 @@
-services:
+﻿services:
   myevents_postgres:
     image: postgres:15
     container_name: myevents_postgres
@@ -13,6 +13,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
 
   myevents_api:
     build: .
@@ -25,3 +27,6 @@ services:
     depends_on:
       myevents_postgres:
         condition: service_healthy
+
+volumes:
+  pgdata:
