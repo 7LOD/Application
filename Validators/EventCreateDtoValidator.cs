@@ -7,8 +7,6 @@ public class EventCreateDtoValidator : AbstractValidator<EventCreateDto>
         RuleFor(e => e.Title)
             .NotEmpty().WithMessage("Title is required.");
 
-
-
         RuleFor(e => e.Description)
             .NotEmpty().WithMessage("Description is required.");
 
@@ -21,8 +19,8 @@ public class EventCreateDtoValidator : AbstractValidator<EventCreateDto>
 
        
         RuleFor(e => e.Capacity)
-            .Must(c => c == null || c >= 0)
-            .WithMessage("Capacity must be greater than zero when provided.");
+            .Must(c => c == null || c > 0)
+            .WithMessage("Capacity must be null or greater than zero.");
 
     }
 }

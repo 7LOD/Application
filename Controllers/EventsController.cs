@@ -1,12 +1,16 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MyEventsApi.Models;
-using MyEventsApi.Dto;
-using MyEventsApi.Data;
-using MyEventsApi.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using MyEventsApi.Data;
+using MyEventsApi.Dto;
+using MyEventsApi.Dtos;
+using MyEventsApi.Models;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using MyEventsApi.Utils;
 
 namespace MyEventsApi.Controllers
 {
@@ -45,9 +49,9 @@ namespace MyEventsApi.Controllers
                     ParticipantCount = e.Participants.Count
                 })
                 .ToListAsync(ct);
-                
-                
-            
+
+
+
 
             return Ok(item);
         }
@@ -94,23 +98,23 @@ namespace MyEventsApi.Controllers
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                Date = dto.Date,
+                Date = DataHelper.ToUtc(dto.Date),
                 OrganizerId = userID,
                 Location = dto.Location,
-                Capacity = dto.Capacity == 0 ? null : dto.Capacity,
-                IsPublic = dto.IsPublic,    
+                Capacity = (dto.Capacity == null || dto.Capacity == 0) ? null : dto.Capacity,
+                IsPublic = dto.IsPublic,
             };
 
             _context.Events.Add(entity);
             await _context.SaveChangesAsync(ct);
 
-            return CreatedAtAction(nameof(GetById), new { id = entity.Id, }, MapToDto(entity));
+            return CreatedAtAction(nameof(GetById), new { id = entity.Id, }, DataHelper.MapToDto(entity));
         }
 
         public class EventPatchDto
         {
-            public string? Title { get; set; } 
-            public string? Description { get; set; } 
+            public string? Title { get; set; }
+            public string? Description { get; set; }
             public DateTime? Date { get; set; }
         }
 
@@ -132,15 +136,14 @@ namespace MyEventsApi.Controllers
 
             if (dto.Title is not null) entity.Title = dto.Title;
             if (dto.Description is not null) entity.Description = dto.Description;
-            if (dto.Date is not null)
+            if (dto.Date is not null) 
             {
-                if (dto.Date.Value <= DateTime.UtcNow)
-                {
+                var newDateUtc = DataHelper.ToUtc(dto.Date.Value);
+                if (newDateUtc <= DateTime.UtcNow)
                     return BadRequest("Event cannot be in the past");
-                }
-                entity.Date = dto.Date.Value;
+                entity.Date = newDateUtc;
             }
-         
+
 
             await _context.SaveChangesAsync(ct);
             return NoContent();
@@ -175,7 +178,7 @@ namespace MyEventsApi.Controllers
 
 
         [HttpPost("{eventId:int}/join")]
-        [Authorize] 
+        [Authorize]
         public async Task<IActionResult> JoinEvent(int eventId, CancellationToken ct)
         {
             var userId = GetUserIdFromToken();
@@ -213,7 +216,7 @@ namespace MyEventsApi.Controllers
             });
 
             await _context.SaveChangesAsync(ct);
-            return Ok(new { message = "Joined", eventId});
+            return Ok(new { message = "Joined", eventId });
         }
 
 
@@ -233,17 +236,100 @@ namespace MyEventsApi.Controllers
 
             return Ok(new { message = "Left", eventId, userId });
         }
-        private static EventResponseDto MapToDto(Event e) => new EventResponseDto
+        
+
+        [HttpGet("calendar")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetEventsInPeriod([FromQuery] DateTime start, [FromQuery] DateTime end, CancellationToken ct)
         {
-            Id = e.Id,
-            Title = e.Title,
-            Description = e.Description,
-            Date = e.Date,
-            Location = e.Location,
-            Capacity = e.Capacity,
-            IsPublic = e.IsPublic,
-            OrganizerName = e.Organizer?.DisplayName ?? "Unknown",
-            ParticipantCount = e.Participants?.Count ?? 0
-        };
+
+
+            start = DataHelper.ToUtc(start);
+            
+            end = DataHelper.ToUtc(end);
+            end = end.AddDays(1);
+
+            if (end <= start)
+                return BadRequest("End date must be after start date");
+
+            var events = await _context.Events
+                .AsNoTracking()
+                .Include(e => e.Organizer)
+                .Include(e => e.Participants)
+                .Where(e => e.IsPublic && e.Date >= start && e.Date <= end)
+                .OrderBy(e => e.Date)
+                .ToArrayAsync(ct);
+
+            var result = events.Select(e => new EventResponseDto
+
+            {
+                Id = e.Id,
+                Title = e.Title,
+                Description = e.Description,
+                Date = DataHelper.ToUtc(e.Date),
+                Location = e.Location,
+                Capacity = e.Capacity,
+                IsPublic = e.IsPublic,
+                OrganizerName = e.Organizer!.DisplayName,
+                ParticipantCount = e.Participants.Count
+
+            }).ToArray();
+            
+                
+            return Ok(result);
+        }
+
+        [HttpGet("search")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SearchEvents([FromQuery] string query, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return BadRequest("Search query cannot be empty.");
+
+            DateTime? parseDate =  null;
+
+            if (DateTime.TryParseExact(
+                query,
+                new[] { "dd.MM.yyyy", "yyyy-MM-dd", "dd/MM/yyyy" },
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeLocal,
+                out var d))
+            {
+                parseDate = DataHelper.ToUtc(d);
+            };
+
+
+            
+            var events = await _context.Events
+                .AsNoTracking()
+                .Include(e => e.Organizer)
+                .Where(e => e.IsPublic &&
+                (EF.Functions.ILike(e.Title ?? "", $"%{query}%") ||
+                EF.Functions.ILike(e.Description ?? "", $"%{query}%") ||
+                EF.Functions.ILike(e.Location ?? "", $"%{query}%") ||
+                (parseDate != null && e.Date.Date == parseDate.Value.Date)))
+                .OrderBy(e => e.Date)
+                .ToListAsync(ct);
+
+            var result = events.Select(e => new EventResponseDto
+            {
+
+                Id = e.Id,
+                Title = e.Title,
+                Description = e.Description,
+                Date = DataHelper.ToUtc(e.Date),
+                Location = e.Location,
+                Capacity = e.Capacity,
+                IsPublic = e.IsPublic,
+                OrganizerName = e.Organizer.DisplayName,
+                ParticipantCount = e.Participants.Count
+
+
+            }).ToArray();
+
+            return Ok(result);
+                
+
+        }
     }
 }
