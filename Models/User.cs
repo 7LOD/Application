@@ -11,5 +11,6 @@ namespace MyEventsApi.Models
         public string DisplayName { get; set; } = string.Empty;
 
         public ICollection<Participant> Participants { get; set; } = new List<Participant>();
+        public ICollection<Event> OrganizedEvents { get; set; } = new List<Event>();
     }
 }

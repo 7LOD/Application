@@ -53,7 +53,7 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Введи 'Bearer' [пробіл] і потім свій токен. \nНаприклад: Bearer Btc110Usdt",
+        Description = "Enter 'Bearer' [space] and then your token. \nExample: Bearer Btc110Usdt",
         Name = "Authorization",
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
         Scheme = "Bearer"

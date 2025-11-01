@@ -29,6 +29,7 @@ namespace MyEventsApi.Controllers
         {
             var item = await _context.Events
                 .AsNoTracking()
+                .Include(e => e.Organizer)
                 .OrderBy(e => e.Date)
                 .ToListAsync(ct);
 
@@ -41,7 +42,9 @@ namespace MyEventsApi.Controllers
         {
             var item = await _context.Events
                 .AsNoTracking()
+                .Include(e => e.Organizer)
                 .Include(e => e.Participants)
+                .ThenInclude(p => p.User)
                 .FirstOrDefaultAsync(e => e.Id == id, ct);
 
             return item is null ? NotFound() : Ok(item);
@@ -53,11 +56,14 @@ namespace MyEventsApi.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var userID = GetUserIdFromToken();
+
             var entity = new Event
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                Date = dto.Date
+                Date = dto.Date,
+                OrganizerId = userID
             };
 
             _context.Events.Add(entity);
@@ -78,12 +84,28 @@ namespace MyEventsApi.Controllers
         [Authorize]
         public async Task<IActionResult> Patch(int id, [FromBody] EventPatchDto dto, CancellationToken ct)
         {
+
             var entity = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
             if (entity is null) return NotFound();
 
-            if(dto.Title is not null) entity.Title = dto.Title;
+            var userId = GetUserIdFromToken();
+            if (entity.OrganizerId != userId)
+            {
+                return Forbid("You are not the organizer of this event");
+            }
+
+
+            if (dto.Title is not null) entity.Title = dto.Title;
             if (dto.Description is not null) entity.Description = dto.Description;
-            if (dto.Date is not null) entity.Date = dto.Date.Value;
+            if (dto.Date is not null)
+            {
+                if (dto.Date.Value <= DateTime.UtcNow)
+                {
+                    return BadRequest("Event cannot be in the past");
+                }
+                entity.Date = dto.Date.Value;
+            }
+         
 
             await _context.SaveChangesAsync(ct);
             return NoContent();
@@ -96,6 +118,13 @@ namespace MyEventsApi.Controllers
         {
             var entity = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
             if (entity is null) return NotFound();
+
+            var userId = GetUserIdFromToken();
+            if (entity.OrganizerId != userId)
+            {
+                return Forbid("You are not the organizer of this event");
+            }
+
 
             _context.Events.Remove(entity);
             await _context.SaveChangesAsync(ct);
@@ -127,6 +156,10 @@ namespace MyEventsApi.Controllers
             if (already) return Conflict("Already joined this event");
 
 
+            if (ev.OrganizerId == userId)
+            {
+                return Conflict("Organizer cannot join their own event as participant");
+            }
 
             _context.Participants.Add(new Participant
             {

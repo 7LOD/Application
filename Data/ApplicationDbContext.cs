@@ -30,6 +30,12 @@ namespace MyEventsApi.Data
                 .HasOne(p => p.Event)
                 .WithMany(u => u.Participants)
                 .HasForeignKey(p => p.EventId);
+
+            modelBuilder.Entity<Event>()
+                .HasOne(e => e.Organizer)
+                .WithMany()
+                .HasForeignKey(e => e.OrganizerId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

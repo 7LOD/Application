@@ -32,7 +32,9 @@ namespace MyEventsApi.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email, ct))
                 return Conflict("User with this email already exists");
 
-            var hash = ComputeSha256Hash(dto.Password);
+            var hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+           
 
             var user = new User
             {
@@ -49,10 +51,15 @@ namespace MyEventsApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto, CancellationToken ct)
         {
-            var hash = ComputeSha256Hash(dto.Password);
+            
+
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == dto.Email && u.PasswordHash == hash, ct);
+                .FirstOrDefaultAsync(u => u.Email == dto.Email, ct);
             if(user == null) return Unauthorized("Invalid credentials");
+
+            var ok = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+            if(!ok)
+                return Unauthorized("Invalid credentials");
 
             var token = GenerateJwtToken(user);
             return Ok(new { token });
@@ -82,11 +89,6 @@ namespace MyEventsApi.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private static string ComputeSha256Hash(string rawData)
-        {
-            using var sha256 = SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-            return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
-        }
+        
     }
 }
