@@ -1,21 +1,54 @@
-# Event-Management-System
+# 🎯 MyEventsApi (.NET 8 Web API)
 
-Event Management System — це Fullstack застосунок (ASP.NET Core + Angular) для створення, перегляду та управління подіями.  
-Підтримує автентифікацію через JWT, CRUD операції для подій, систему Join/Leave учасників та інтеграцію з PostgreSQL через EF Core.
+**MyEventsApi** — це REST API для керування подіями: користувачі можуть створювати, редагувати, приєднуватись або залишати події.  
+Система побудована на **.NET 8**, використовує **Entity Framework Core**, **JWT авторизацію** та **PostgreSQL** у Docker-середовищі.
 
-## MyEventsApi
+---
 
-### Overview
-MyEventsApi — backend частина системи керування подіями (**Event Management System**), створена на **ASP.NET Core 8 Web API**.
+## 🚀 Швидкий запуск
 
-### Features
-- Authentication (JWT)
-- CRUD для подій
-- FluentValidation
-- Middleware для обробки помилок
-- Swagger для API тестування
+```bash
+docker compose up --build
+🔗 Swagger UI: http://localhost:8080/swagger
 
-### Tech Stack
-- .NET 8 Web API  
-- PostgreSQL + EF Core  
-- Swagger / FluentValidation / JWT
+---
+
+⚙️ Основні можливості
+
+🔐 JWT Auth — реєстрація, логін, авторизація
+
+📅 Events CRUD — створення, редагування, видалення подій
+
+🙋 Join / Leave — користувачі можуть приєднуватися до подій
+
+🐳 Docker + PostgreSQL — повна ізоляція середовища
+
+🧩 Health-check — для моніторингу стану API
+
+---
+
+🧠 Використані технології
+
+ASP.NET Core 8
+
+Entity Framework Core + PostgreSQL
+
+JWT (JSON Web Tokens)
+
+Docker & Docker Compose
+
+Swagger (OpenAPI)
+
+---
+
+📁 Структура проекту
+	
+Controllers/   →  AuthController, EventsController
+
+Models/        →  User, Event, Participant
+
+Data/          →  ApplicationDbContext (EF Core)
+
+Dtos/          →  DTOs для запитів/відповідей
+
+Migrations/    →  EF Core міграції
