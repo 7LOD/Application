@@ -29,9 +29,25 @@ namespace MyEventsApi.Controllers
         {
             var item = await _context.Events
                 .AsNoTracking()
+                .Where(e => e.IsPublic)
                 .Include(e => e.Organizer)
                 .OrderBy(e => e.Date)
+                .Select(e => new EventResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+                    Date = e.Date,
+                    Location = e.Location,
+                    Capacity = e.Capacity,
+                    IsPublic = e.IsPublic,
+                    OrganizerName = e.Organizer!.DisplayName,
+                    ParticipantCount = e.Participants.Count
+                })
                 .ToListAsync(ct);
+                
+                
+            
 
             return Ok(item);
         }
@@ -45,6 +61,22 @@ namespace MyEventsApi.Controllers
                 .Include(e => e.Organizer)
                 .Include(e => e.Participants)
                 .ThenInclude(p => p.User)
+                .Where(e => e.Id == id)
+                .Select(e => new EventResponseDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+                    Date = e.Date,
+                    Location = e.Location,
+                    Capacity = e.Capacity,
+                    IsPublic = e.IsPublic,
+                    OrganizerName = e.Organizer!.DisplayName,
+                    ParticipantCount = e.Participants.Count,
+                    ParticipantName = e.Participants
+                        .Select(p => p.User!.DisplayName)
+                        .ToList()
+                })
                 .FirstOrDefaultAsync(e => e.Id == id, ct);
 
             return item is null ? NotFound() : Ok(item);
@@ -63,13 +95,16 @@ namespace MyEventsApi.Controllers
                 Title = dto.Title,
                 Description = dto.Description,
                 Date = dto.Date,
-                OrganizerId = userID
+                OrganizerId = userID,
+                Location = dto.Location,
+                Capacity = dto.Capacity == 0 ? null : dto.Capacity,
+                IsPublic = dto.IsPublic,    
             };
 
             _context.Events.Add(entity);
             await _context.SaveChangesAsync(ct);
 
-            return CreatedAtAction(nameof(GetById), new { id = entity.Id, }, entity);
+            return CreatedAtAction(nameof(GetById), new { id = entity.Id, }, MapToDto(entity));
         }
 
         public class EventPatchDto
@@ -160,6 +195,15 @@ namespace MyEventsApi.Controllers
             {
                 return Conflict("Organizer cannot join their own event as participant");
             }
+            if (ev.Capacity.HasValue)
+            {
+                var currectCount = await _context.Participants
+                    .CountAsync(p => p.EventId == eventId, ct);
+                if (currectCount >= ev.Capacity.Value)
+                {
+                    return BadRequest("Event is full");
+                }
+            }
 
             _context.Participants.Add(new Participant
             {
@@ -189,5 +233,17 @@ namespace MyEventsApi.Controllers
 
             return Ok(new { message = "Left", eventId, userId });
         }
+        private static EventResponseDto MapToDto(Event e) => new EventResponseDto
+        {
+            Id = e.Id,
+            Title = e.Title,
+            Description = e.Description,
+            Date = e.Date,
+            Location = e.Location,
+            Capacity = e.Capacity,
+            IsPublic = e.IsPublic,
+            OrganizerName = e.Organizer?.DisplayName ?? "Unknown",
+            ParticipantCount = e.Participants?.Count ?? 0
+        };
     }
 }

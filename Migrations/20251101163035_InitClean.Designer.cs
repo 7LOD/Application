@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyEventsApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251031155218_AddUserEventParticipant")]
-    partial class AddUserEventParticipant
+    [Migration("20251101163035_InitClean")]
+    partial class InitClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,9 @@ namespace MyEventsApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("Capacity")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
@@ -40,11 +43,28 @@ namespace MyEventsApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OrganizerId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizerId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Events");
                 });
@@ -90,6 +110,21 @@ namespace MyEventsApi.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("MyEventsApi.Models.Event", b =>
+                {
+                    b.HasOne("MyEventsApi.Models.User", "Organizer")
+                        .WithMany()
+                        .HasForeignKey("OrganizerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyEventsApi.Models.User", null)
+                        .WithMany("OrganizedEvents")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Organizer");
+                });
+
             modelBuilder.Entity("MyEventsApi.Models.Participant", b =>
                 {
                     b.HasOne("MyEventsApi.Models.Event", "Event")
@@ -116,6 +151,8 @@ namespace MyEventsApi.Migrations
 
             modelBuilder.Entity("MyEventsApi.Models.User", b =>
                 {
+                    b.Navigation("OrganizedEvents");
+
                     b.Navigation("Participants");
                 });
 #pragma warning restore 612, 618

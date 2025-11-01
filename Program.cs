@@ -6,6 +6,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using MyEventsApi.Data;
 using System.Text.Json.Serialization;
+using MyEventsApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,7 +54,7 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Enter 'Bearer' [space] and then your token. \nExample: Bearer Btc110Usdt",
+        Description = "Enter 'Bearer' [space] and then your token. \nExample: Bearer [token]",
         Name = "Authorization",
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
@@ -110,5 +111,50 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
+    
+    if(!db.Users.Any())
+    {
+        var u1 = new User { Email = "Beer@example.com", DisplayName = "Budejovice", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456") };
+        var u2 = new User { Email = "Vodka@example.com", DisplayName = "Rada", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456") };
+
+        db.Users.AddRange(u1, u2);
+        db.SaveChanges();
+
+        db.Events.AddRange(
+            new Event
+            {
+                Title = "Beer Festival",
+                Description = "Join us for a day of beer tasting and fun!",
+                Date = DateTime.UtcNow.AddDays(30),
+                Location = "City Park",
+                Capacity = 100,
+                IsPublic = true,
+                OrganizerId = u1.Id
+            },
+            new Event
+            {
+                Title = "Vodka Tasting",
+                Description = "Experience the finest vodkas from around the world.",
+                Date = DateTime.UtcNow.AddDays(45),
+                Location = "Downtown Bar",
+                Capacity = 50,
+                IsPublic = true,
+                OrganizerId = u2.Id
+            },
+            new Event
+            {
+                Title = "Private Whiskey Night",
+                Description = "An exclusive event for whiskey enthusiasts.",
+                Date = DateTime.UtcNow.AddDays(60),
+                Location = "Uptown Lounge",
+                Capacity = 30,
+                IsPublic = false,
+                OrganizerId = u1.Id
+            }
+            
+        );
+        db.SaveChanges();
+    }
 }
+
 app.Run();
