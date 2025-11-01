@@ -149,3 +149,4 @@ C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\refint\MyEventsApi.dll
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\MyEventsApi.pdb
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\MyEventsApi.genruntimeconfig.cache
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\ref\MyEventsApi.dll
+C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

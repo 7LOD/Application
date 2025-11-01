@@ -14,7 +14,7 @@ namespace MyEventsApi.Controllers
 {
 
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("auth")]
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

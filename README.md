@@ -1,14 +1,19 @@
 # 🎯 MyEventsApi (.NET 8 Web API)
 
+![Swagger UI](swagger-ui.png)
+
 **MyEventsApi** — це REST API для керування подіями: користувачі можуть створювати, редагувати, приєднуватись або залишати події.  
 Система побудована на **.NET 8**, використовує **Entity Framework Core**, **JWT авторизацію** та **PostgreSQL** у Docker-середовищі.
 
 ---
 
+
 ## 🚀 Швидкий запуск
 
 ```bash
+
 docker compose up --build
+
 🔗 Swagger UI: http://localhost:8080/swagger
 
 ---
