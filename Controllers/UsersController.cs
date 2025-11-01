@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyEventsApi.Data;
+using MyEventsApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -12,7 +13,7 @@ namespace MyEventsApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private UsersController(ApplicationDbContext context)
+        public UsersController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -25,19 +26,39 @@ namespace MyEventsApi.Controllers
                 ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             var userId = Guid.Parse(userIdClaim!);
 
-            var events = _context.Participants
+
+            var joinedEvents =  _context.Participants
                 .Where(p => p.UserId == userId)
-                .Select(p => new
+                .Select(p => new UserEventView
                 {
-                    p.Event!.Id,
-                    p.Event.Title,
-                    p.Event.Description,
-                    p.Event.Date,
-                    p.JoinedAt
-                })
-                .OrderBy(x => x.Date)
+                    Id = p.Event!.Id,
+                    Title = p.Event.Title,
+                    Description = p.Event.Description,
+                    Date = p.Event.Date,
+                    OrganizerId = p.Event.OrganizerId,
+                    IsOrganizer = false,
+                    JoinedAt = p.JoinedAt
+                });
+
+            var myEvents =  _context.Events
+                .Where(e => e.OrganizerId == userId)
+                .Select(e => new UserEventView
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    Description = e.Description,
+                    Date = e.Date,
+                    OrganizerId = e.OrganizerId,
+                    IsOrganizer = true,
+                    JoinedAt = null
+                });
+
+            var allEvents = await joinedEvents
+                .Union(myEvents)
+                .OrderBy(e => e.Date)
                 .ToListAsync(ct);
-            return Ok(await events);
+
+            return Ok(allEvents);
 
         }
     }
