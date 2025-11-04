@@ -143,9 +143,9 @@ C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\swae.build.ex.cache
-C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\MyEvents.EEF5CF5B.Up2Date
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\MyEventsApi.dll
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\refint\MyEventsApi.dll
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\MyEventsApi.pdb
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\MyEventsApi.genruntimeconfig.cache
 C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\ref\MyEventsApi.dll
+C:\Users\ukhal\MyEventsApi\obj\Debug\net8.0\MyEvents.EEF5CF5B.Up2Date

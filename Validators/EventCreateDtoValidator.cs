@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using MyEventsApi.Dto;
+using MyEventsApi.Dtos;
 public class EventCreateDtoValidator : AbstractValidator<EventCreateDto>
 {
     public EventCreateDtoValidator()
@@ -17,10 +17,10 @@ public class EventCreateDtoValidator : AbstractValidator<EventCreateDto>
         RuleFor(e => e.Date)
             .GreaterThan(DateTime.Now).WithMessage("Event date must be in the future.");
 
-       
+
         RuleFor(e => e.Capacity)
-            .Must(c => c == null || c > 0)
-            .WithMessage("Capacity must be null or greater than zero.");
+            .Must(c => c == null || c >= 0)
+            .WithMessage("Capacity must be 0 (unlimited) or greater.");
 
     }
 }

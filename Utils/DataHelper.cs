@@ -1,6 +1,8 @@
 ﻿using MyEventsApi.Dtos;
 using MyEventsApi.Models;
 
+
+
 namespace MyEventsApi.Utils
 {
     public static class DataHelper
@@ -26,5 +28,6 @@ namespace MyEventsApi.Utils
                 DateTimeKind.Unspecified => DateTime.SpecifyKind(dt, DateTimeKind.Utc)
             };
         }
+
     }
 }

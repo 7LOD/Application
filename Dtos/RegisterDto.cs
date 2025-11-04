@@ -1,4 +1,4 @@
-﻿namespace MyEventsApi.Dto
+﻿namespace MyEventsApi.Dtos
 {
     public class RegisterDto
     {

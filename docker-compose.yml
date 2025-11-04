@@ -24,6 +24,9 @@
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=myevents_postgres;Port=5432;Database=eventsdb;Username=dev;Password=dev
+      - JWT__Key=SuperSecretDevelopmentKey123456789
+      - JWT__Issuer=MyEventsApi
+      - JWT__Audience=MyEventsApiClient
     depends_on:
       myevents_postgres:
         condition: service_healthy

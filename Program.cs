@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using MyEventsApi.Data;
 using System.Text.Json.Serialization;
 using MyEventsApi.Models;
+using MyEventsApi.Services.Interfaces;
+using MyEventsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,7 +76,18 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+builder.Services.AddCors(options =>
+{ 
+    options.AddPolicy("AllowFrontend",
+        policy => policy
+        .WithOrigins("http://localhost:4200")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});   
 
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 
 
@@ -102,6 +115,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
+app.UseCors("AllowFrontend");
 app.UseAuthorization();
 
 

@@ -1,5 +1,5 @@
 using FluentValidation;
-using MyEventsApi.Dto;
+using MyEventsApi.Dtos;
 
 public class LoginDtoValidator : AbstractValidator<LoginDto>
 {

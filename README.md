@@ -1,8 +1,9 @@
-🎯 MyEventsApi (.NET 8 Web API)
+# 🎯 MyEventsApi — Event Management System (.NET 8 + Angular)
 
-MyEventsApi — це REST API для керування подіями.
-Користувачі можуть створювати, редагувати, переглядати, приєднуватись або залишати події.
-API побудовано на .NET 8, використовує Entity Framework Core, JWT авторизацію та PostgreSQL у Docker-середовищі.
+**MyEventsApi** — це REST API та клієнт для керування подіями.  
+Користувачі можуть створювати, редагувати, переглядати, приєднуватись або залишати події.  
+Бекенд побудовано на **.NET 8 Web API**, фронтенд — на **Angular + TailwindCSS**,  
+база даних — **PostgreSQL** у Docker-середовищі.
 
 🚀 Швидкий старт
 docker compose up --build
@@ -90,6 +91,24 @@ FluentValidation
 
 Middleware Error Handling
 
+🎨 Frontends
+
+Фронтенд реалізовано на **Angular 18 + TailwindCSS**:
+
+✅ Login / Register сторінки  
+
+✅ Discover Events — перегляд публічних подій  
+
+✅ Join / Leave події  
+
+✅ My Events — особисті події користувача  
+
+✅ Create / Edit Event — CRUD через API  
+
+✅ JWT AuthGuard + HTTP Interceptor  
+
+✅ Docker build для фронтенду (nginx serve)
+
 📁 Структура проекту
 Controllers/     →  AuthController, EventsController, UsersController
 Models/          →  User, Event, Participant
@@ -105,3 +124,5 @@ Utils/DataHelper.cs — конвертація часу в UTC + мапінг м
 calendar та search — розширення Stage #1 для подальшого використання у фронтенді (Angular)
 
 Swagger автоматично генерується з урахуванням Bearer авторизації
+
+🧩 Проєкт перебуває на етапі інтеграції з Angular-фронтендом.
